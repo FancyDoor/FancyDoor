@@ -29,6 +29,9 @@ pinOff = GPIO.LOW
 gpiopin = [b7, b6, b5, b4, b3, b2, b1, b0]
 for i in range(0,8):
     GPIO.setup(gpiopin[i],GPIO.OUT)
+for i in range(0,8):
+    GPIO.output(gpiopin[i], 0)
+
     
     #                                                                    def convertBinary(decimal):
     #                                                                        binary = bin(decimal)

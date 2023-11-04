@@ -20,11 +20,6 @@ import sys
 from captcha.image import ImageCaptcha
 
 
-# NOTE: CHANGE LOGGING LEVEL HERE
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-# logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
-
-
 # Given length of captcha, generate a captcha and return generated text
 def generate_captcha(length):
     characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -46,6 +41,15 @@ def captcha_handler():
 
 
 def main():
+    # Enables logging if run with command line argument '-d'
+    if len(sys.argv) != 1 and sys.argv[1] == '-d':
+        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+        logging.debug("Logging enabled")
+    else:
+        # Otherwise, set base logging level
+        logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+
+    # Test captcha functionality
     captcha_handler()
 
 

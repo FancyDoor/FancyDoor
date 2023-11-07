@@ -15,8 +15,41 @@
 
 # IMPORTS #
 import logging, random, sys, os
+import tkinter as Tk
 from captcha.image import ImageCaptcha
 from imageai.Detection import ObjectDetection
+
+
+# Application class handles GUI
+class Application(Tk.Frame):
+    def __init__(self, master=None):
+        Tk.Frame.__init__(self, master)
+        self.grid(sticky='nsew')
+        self.createWidgets()
+
+    def createWidgets(self):
+        # User instructions
+        self.instructionLabel = Tk.Label(self, text="Select a number, \nthen press the button!")
+        self.instructionLabel.grid(sticky='ew', padx=(50, 50), pady=(50, 5))
+
+        # # Option variable and list of options for numbers
+        # self.optionVar = Tk.StringVar()
+        # optionList = (range(1, 55))
+        # # Current option from optionList
+        # self.optionVar.set(str(optionList[0]))
+        # self.om = Tk.OptionMenu(self, self.optionVar, *optionList)
+        # self.om.grid(sticky='ew', padx=(50, 50), pady=(5, 0))
+
+        self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+        self.quitButton.grid(sticky='ew', padx=(50, 50), pady=(0, 0))
+
+        # # Stores result of nth prime calculation
+        # self.resultLabel = Tk.Label(self, text="Result: ")
+        # self.resultLabel.grid(sticky='ew', padx=(50, 50), pady=(0, 50))
+
+
+# Initialize app
+app = Application()
 
 
 # Given length of captcha, generate a captcha and return generated text
@@ -88,6 +121,7 @@ def scanner(state):
 
 
 def main():
+    global app
     # Enables logging if run with command line argument '-d'
     if len(sys.argv) != 1 and sys.argv[1] == '-d':
         logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -108,6 +142,9 @@ def main():
             print(" -", name, "with certainty", percentage)
             if percentage > 60:
                 print("SUCCESS")
+
+    app.master.title("Fancy Door")
+    app.mainloop()
 
 
 if __name__ == "__main__":

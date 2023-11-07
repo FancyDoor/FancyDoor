@@ -14,10 +14,9 @@
 #   Door will open (manually).
 
 # WHAT DOES ANY OF THIS MEAN
-import logging
-import random
-import sys
+import logging, random, sys, os
 from captcha.image import ImageCaptcha
+from imageai.Detection import ObjectDetection
 
 
 # Given length of captcha, generate a captcha and return generated text
@@ -40,6 +39,22 @@ def captcha_handler():
         print("Incorrect captcha")
 
 
+def image_recognizer(image_path):
+    execution_path = os.getcwd()
+    detector = ObjectDetection()
+    # NOTE Change this to use different models
+    detector.setModelTypeAsRetinaNet()
+    # detector.setModelTypeAsYOLOv3()
+    # detector.setModelTypeAsTinyYOLOv3()
+    detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    detector.loadModel()
+    predictions = detector.detectObjectsFromImage(input_image=image_path, minimum_percentage_probability=30)
+    names = []
+    for prediction in predictions:
+        names.append(prediction['name'])
+    return names
+
+
 def main():
     # Enables logging if run with command line argument '-d'
     if len(sys.argv) != 1 and sys.argv[1] == '-d':
@@ -51,6 +66,14 @@ def main():
 
     # Test captcha functionality
     captcha_handler()
+
+    # Test image recognition functionality
+    paths = ["assets/hand.jpg"]
+    for i in paths:
+        names = image_recognizer(i)
+        print("Image predictions for", i)
+        for name in names:
+            print(" -", name)
 
 
 if __name__ == "__main__":

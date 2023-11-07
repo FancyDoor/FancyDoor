@@ -13,7 +13,7 @@
 #   Servo controlled locks.
 #   Door will open (manually).
 
-# WHAT DOES ANY OF THIS MEAN
+# IMPORTS #
 import logging, random, sys, os
 from captcha.image import ImageCaptcha
 from imageai.Detection import ObjectDetection
@@ -39,6 +39,9 @@ def captcha_handler():
         print("Incorrect captcha")
 
 
+# image_recognizer
+# Params: image_path    A string path to an image
+# Returns: results      A tuple consisting of the prediction name and percent certainty
 def image_recognizer(image_path):
     execution_path = os.getcwd()
     detector = ObjectDetection()
@@ -49,10 +52,39 @@ def image_recognizer(image_path):
     detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
     detector.loadModel()
     predictions = detector.detectObjectsFromImage(input_image=image_path, minimum_percentage_probability=30)
-    names = []
+    results = []
     for prediction in predictions:
-        names.append(prediction['name'])
-    return names
+        results.append((prediction['name'], prediction['percentage_probability']))
+    return results
+
+
+# Retina and hand scanner - should open camera, take a picture, save the picture, and call image_recognizer with the
+# image path. Will update state depending on success or fail.
+# NOTE difference between the scanner and the recognizer is that the scanner handles state.
+def scanner(state):
+    # TODO Wrap in "if" block when state known
+    if state:
+        # TODO Get hand image from camera. Take a picture, save image & its path, and pass path to image_recognizer()
+        # Recognize image
+        result = image_recognizer("path/to/image")
+        # Result is good if it detects a person with more than 60% certainty
+        for name, percent in result:
+            if name == 'person' and percent > 60:
+                pass
+            else:
+                # TODO Figure out state control...
+                break
+
+        # Get eye image from camera
+        # Recognize image
+        result = image_recognizer("path/to/image")
+        # Result is good if it detects a person with more than 60% certainty
+        for name, percent in result:
+            if name == 'person' and percent > 60:
+                state += 1
+    else:
+        # If image recognition failed,
+        state = 0
 
 
 def main():
@@ -70,10 +102,12 @@ def main():
     # Test image recognition functionality
     paths = ["assets/hand.jpg"]
     for i in paths:
-        names = image_recognizer(i)
+        results = image_recognizer(i)
         print("Image predictions for", i)
-        for name in names:
-            print(" -", name)
+        for name, percentage in results:
+            print(" -", name, "with certainty", percentage)
+            if percentage > 60:
+                print("SUCCESS")
 
 
 if __name__ == "__main__":

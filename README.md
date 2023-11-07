@@ -1,6 +1,6 @@
 # FancyDoor
 
-## Build instructions:
+## Build instructions for PyCharm:
 1. Set up a Python 3.9.2 virtual environment
     - [Download and install Python 3.9.2](https://www.python.org/ftp/python/3.9.2/python-3.9.2-amd64.exe)
     - Once installed, go to Settings > Project: FancyDoor > Python Interpreter and select "Add Interpreter > Add Local Interpreter..."

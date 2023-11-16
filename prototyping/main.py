@@ -82,7 +82,11 @@ def image_recognizer(image_path):
     detector.setModelTypeAsRetinaNet()
     # detector.setModelTypeAsYOLOv3()
     # detector.setModelTypeAsTinyYOLOv3()
-    detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    # NOTE Path for Windows
+    # detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    # NOTE Path for Linux (RasPi)
+    detector.setModelPath(execution_path + "/assets/retinanet_resnet50_fpn_coco-eeacb38b.pth")
+
     detector.loadModel()
     predictions = detector.detectObjectsFromImage(input_image=image_path, minimum_percentage_probability=30)
     results = []

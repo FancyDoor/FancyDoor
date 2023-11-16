@@ -18,6 +18,7 @@ import logging, random, sys, os
 import tkinter as Tk
 from captcha.image import ImageCaptcha
 from imageai.Detection import ObjectDetection
+from PIL import ImageTk, Image
 
 
 # Application class handles GUI
@@ -48,6 +49,7 @@ class Application(Tk.Frame):
         # self.resultLabel.grid(sticky='ew', padx=(50, 50), pady=(0, 50))
 
 
+root = Tk.Tk()
 # Initialize app
 app = Application()
 
@@ -83,9 +85,9 @@ def image_recognizer(image_path):
     # detector.setModelTypeAsYOLOv3()
     # detector.setModelTypeAsTinyYOLOv3()
     # NOTE Path for Windows
-    # detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
     # NOTE Path for Linux (RasPi)
-    detector.setModelPath(execution_path + "/assets/retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    # detector.setModelPath(execution_path + "/assets/retinanet_resnet50_fpn_coco-eeacb38b.pth")
 
     detector.loadModel()
     predictions = detector.detectObjectsFromImage(input_image=image_path, minimum_percentage_probability=30)

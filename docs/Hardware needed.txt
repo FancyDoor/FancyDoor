@@ -1,0 +1,13 @@
+Ultrasonic Sensor
+
+At least one button
+
+button combination with ttl chips. Code: 1010
+- breadboard
+
+Webcam
+- use microphone on cam
+
+IR Sensor
+
+One singular servo

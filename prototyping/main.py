@@ -14,44 +14,15 @@
 #   Door will open (manually).
 
 # IMPORTS #
-import logging, random, sys, os
+import logging
+import os
+import random
+import sys
 import tkinter as Tk
+
+from PIL import ImageTk, Image
 from captcha.image import ImageCaptcha
 from imageai.Detection import ObjectDetection
-from PIL import ImageTk, Image
-
-
-# Application class handles GUI
-class Application(Tk.Frame):
-    def __init__(self, master=None):
-        Tk.Frame.__init__(self, master)
-        self.grid(sticky='nsew')
-        self.createWidgets()
-
-    def createWidgets(self):
-        # User instructions
-        self.instructionLabel = Tk.Label(self, text="Select a number, \nthen press the button!")
-        self.instructionLabel.grid(sticky='ew', padx=(50, 50), pady=(50, 5))
-
-        # # Option variable and list of options for numbers
-        # self.optionVar = Tk.StringVar()
-        # optionList = (range(1, 55))
-        # # Current option from optionList
-        # self.optionVar.set(str(optionList[0]))
-        # self.om = Tk.OptionMenu(self, self.optionVar, *optionList)
-        # self.om.grid(sticky='ew', padx=(50, 50), pady=(5, 0))
-
-        self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
-        self.quitButton.grid(sticky='ew', padx=(50, 50), pady=(0, 0))
-
-        # # Stores result of nth prime calculation
-        # self.resultLabel = Tk.Label(self, text="Result: ")
-        # self.resultLabel.grid(sticky='ew', padx=(50, 50), pady=(0, 50))
-
-
-root = Tk.Tk()
-# Initialize app
-app = Application()
 
 
 # Given length of captcha, generate a captcha and return generated text
@@ -61,17 +32,119 @@ def generate_captcha(length):
     logging.debug("Generated captcha: " + captcha_text)
     image = ImageCaptcha(width=300, height=150, fonts=['assets/times.ttf', 'assets/lucon.ttf'])
     image.generate(captcha_text)
-    image.write(captcha_text, 'assets/CAPTCHA.png')
-    return captcha_text
+    path = 'assets/CAPTCHA.png'
+    image.write(captcha_text, path)
+    return captcha_text.lower(), path
 
 
-def captcha_handler():
-    captcha_text = generate_captcha(8).lower()
-    user_input = input("Captcha validation: ").lower()
-    if captcha_text == user_input:
-        print("Success")
-    else:
-        print("Incorrect captcha")
+# Application class handles GUI
+class Application(Tk.Frame):
+    pinCount = 0
+    def __init__(self, master=None):
+        Tk.Frame.__init__(self, master)
+        self.captchaUserInput = Tk.StringVar()
+        self.pin = Tk.StringVar()
+        self.grid(sticky='nsew')
+        self.createWidgets()
+
+    # Destroy all widgets in application and prompt user to quit GUI
+    def lock(self):
+        # Locks application
+        for widget in self.winfo_children():
+            widget.destroy()
+        self.lockLabel = Tk.Label(self, text="DOOR LOCKED - TRY AGAIN")
+        self.lockLabel.grid(sticky='nsew', padx=(50, 50), pady=(50, 50))
+
+        self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+        self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
+
+    # Captcha submission function validates captcha and sets up window for pin entry
+    def submitCaptcha(self):
+        logging.debug("Submitted captcha, check now")
+        # Validate captcha here
+        if self.captchaUserInput.get() == self.captchaText:
+            # Destroy and reconfigure buttons/entry boxes
+            self.captchaLabel.destroy()
+            self.captchaEntry.destroy()
+            self.submitButton.destroy()
+            self.quitButton.destroy()
+
+            # Setup next application state (PIN entry)
+            self.instructionLabel.configure(text="Enter 4-digit pin")
+
+            self.pinEntry = Tk.Entry(self, textvariable=self.pin, show="*")
+            self.pinEntry.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+
+            self.submitButton = Tk.Button(self, text="Submit", command=self.submitPin)
+            self.submitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+
+            self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+            self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
+        else:
+            logging.debug("Captcha failed")
+            self.lock()
+
+    # Pin submission function validates pin entries, sets up each pin state, and calls success function on proper entry
+    def submitPin(self):
+        userPinInput = self.pin.get()
+        if len(userPinInput) == 4 and userPinInput == "1234" and self.pinCount == 0:
+            logging.debug("4-Digit pin passed")
+            self.pinCount += 1
+            # Update instruction label and clear pin field
+            self.instructionLabel.configure(text="Enter 8-digit pin")
+            self.pinEntry.delete(0, Tk.END)
+            self.pinEntry.insert(0, "")
+        elif len(userPinInput) == 8 and userPinInput == "12345678" and self.pinCount == 1:
+            logging.debug("8-Digit pin passed")
+            self.pinCount += 1
+            self.instructionLabel.configure(text="Enter 16-digit pin")
+            self.pinEntry.delete(0, Tk.END)
+            self.pinEntry.insert(0, "")
+        elif len(userPinInput) == 16 and userPinInput == "1234567890123456" and self.pinCount == 2:
+            logging.debug("16-Digit pin passed")
+            self.pinCount += 1
+            self.instructionLabel.configure(text="Success")
+            self.pinEntry.destroy()
+            self.submitButton.destroy()
+            self.quitButton.destroy()
+            self.logicGateInstructions = Tk.Label(self, text="Complete the logic gate puzzle"
+                                                             "\nto unlock the door")
+            self.logicGateInstructions.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+            self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+            self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
+
+            # TODO call function to set up listener for logic gate puzzle here
+
+        else:
+            logging.debug("Pin entry failed")
+            self.lock()
+
+    def createWidgets(self):
+        # User instructions
+        self.instructionLabel = Tk.Label(self, text="Enter Captcha:")
+        self.instructionLabel.grid(sticky='ew', padx=(100, 100), pady=(50, 5))
+
+        # Generate captcha and show in label
+        self.captchaText, captchaPath = generate_captcha(8)
+        self.captchaImage = Image.open(captchaPath)
+        self.captchaImageTk = ImageTk.PhotoImage(self.captchaImage)
+        self.captchaLabel = Tk.Label(self, image=self.captchaImageTk)
+        self.captchaLabel.image = self.captchaImageTk
+        self.captchaLabel.grid(sticky='new', padx=(0, 0), pady=(5, 5))
+
+        self.captchaEntry = Tk.Entry(self, textvariable=self.captchaUserInput)
+        self.captchaEntry.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+
+        self.submitButton = Tk.Button(self, text="Submit", command=self.submitCaptcha)
+        self.submitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+
+        self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+        self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+
+
+root = Tk.Tk()
+# Initialize app
+app = Application()
 
 
 # image_recognizer
@@ -128,6 +201,7 @@ def scanner(state):
 
 def main():
     global app
+
     # Enables logging if run with command line argument '-d'
     if len(sys.argv) != 1 and sys.argv[1] == '-d':
         logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -136,8 +210,8 @@ def main():
         # Otherwise, set base logging level
         logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
-    # Test captcha functionality
-    captcha_handler()
+    app.master.title("Fancy Door")
+    app.mainloop()
 
     # Test image recognition functionality
     paths = ["assets/hand.jpg"]
@@ -148,9 +222,7 @@ def main():
             print(" -", name, "with certainty", percentage)
             if percentage > 60:
                 print("SUCCESS")
-
-    app.master.title("Fancy Door")
-    app.mainloop()
+                break
 
 
 if __name__ == "__main__":

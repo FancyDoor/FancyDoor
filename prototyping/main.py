@@ -63,11 +63,15 @@ class Application(Tk.Frame):
         self.grid(sticky='nsew')
         self.createWidgets()
 
-    # Destroy all widgets in application and prompt user to quit GUI
-    def lock(self):
-        # Locks application
+    # Destroys all widgets in application
+    def clearFrame(self):
         for widget in self.winfo_children():
             widget.destroy()
+
+    # Calls clearFrame and prompt user to quit GUI
+    def lock(self):
+        # Locks application
+        self.clearFrame()
         self.lockLabel = Tk.Label(self, text="DOOR LOCKED - TRY AGAIN")
         self.lockLabel.grid(sticky='nsew', padx=(50, 50), pady=(50, 50))
 
@@ -81,20 +85,15 @@ class Application(Tk.Frame):
         if self.captchaUserInput.get() == self.captchaText:
             logger.debug("Captcha succeeded, setting up pin entry")
             # Destroy and reconfigure buttons/entry boxes
-            self.captchaLabel.destroy()
-            self.captchaEntry.destroy()
-            self.submitButton.destroy()
-            self.quitButton.destroy()
+            self.clearFrame()
 
             # Setup next application state (PIN entry)
-            self.instructionLabel.configure(text="Enter 4-digit pin")
-
+            self.instructionLabel = Tk.Label(self, text="Enter 4-digit pin")
+            self.instructionLabel.grid(sticky='ew', padx=(100, 100), pady=(50, 5))
             self.pinEntry = Tk.Entry(self, textvariable=self.pin, show="*")
             self.pinEntry.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
-
             self.submitButton = Tk.Button(self, text="Submit", command=self.submitPin)
             self.submitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
-
             self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
             self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
         else:
@@ -120,22 +119,35 @@ class Application(Tk.Frame):
         elif len(userPinInput) == 16 and userPinInput == "1234567890123456" and self.pinCount == 2:
             logger.debug("16-Digit pin passed")
             self.pinCount += 1
-            self.instructionLabel.configure(text="Success")
-            self.pinEntry.destroy()
-            self.submitButton.destroy()
-            self.quitButton.destroy()
-            self.logicGateInstructions = Tk.Label(self, text="Complete the logic gate puzzle"
-                                                             "\nto unlock the door")
-            self.logicGateInstructions.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
-            self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
-            self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
-
-            # TODO call function to set up listener for logic gate puzzle here
-            logger.debug("TODO: Call function to set up listener for logic gate puzzle here...\n\n")
-
+            self.logicGateSetup()
         else:
             logger.debug("Pin entry failed")
             self.lock()
+
+
+    def logicGateSetup(self):
+        logger.debug("Setting up logic gate text screen")
+        # Clear frame and set up next state
+        self.clearFrame()
+        self.instructionLabel = Tk.Label(self, text="Success")
+        self.instructionLabel.grid(sticky='ew', padx=(100, 100), pady=(50, 5))
+        self.logicGateInstructions = Tk.Label(self, text="Complete the logic gate puzzle\n to unlock the door")
+        self.logicGateInstructions.grid(sticky='ew', padx=(100, 100), pady=(5, 5))
+        self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
+        self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
+
+        # TODO call function to set up listener for logic gate puzzle here - basically all we need to do is have
+        #  some statement here that says, "if we receive a signal on some pin, update the GUI with success
+        #  message and call the servo function"
+        # Algorithm:
+        # 1. Call function to set up pin signal listener (prevents any chance of pin being activated before this
+        # state is reached)
+        # 2. If pin signalled, call servo setup function (prevents any chance of any other code referencing the servo
+        # before this state is reached)
+        #       - Can either control the servo activation here or there
+        # 4. Update GUI with success message - "door" is now open
+        logger.debug("TODO: Call function to set up listener for logic gate puzzle here...\n\n")
+
 
     def createWidgets(self):
         # User instructions
@@ -196,9 +208,14 @@ def image_recognizer(image_path):
     return results
 
 
+# Note I was gonna do this whole thing where the state gets passed from method to method but that wasn't gonna work
+#  in practice with the GUI. Now, the GUI handles state management of itself and interacts with external methods only
+#  to interface with external hardware or libraries (captcha, imageai, servo control, etc). So for now these lines
+#  are defunct
 # Retina and hand scanner - should open camera, take a picture, save the picture, and call image_recognizer with the
 # image path. Will update state depending on success or fail.
 # NOTE difference between the scanner and the recognizer is that the scanner handles state.
+'''
 def scanner(state):
     # TODO Wrap in "if" block when state known
     if state:
@@ -223,6 +240,7 @@ def scanner(state):
     else:
         # If image recognition failed,
         state = 0
+'''
 
 
 def main():
@@ -230,17 +248,6 @@ def main():
     # Disable this to only test image recognition
     app.master.title("Fancy Door")
     app.mainloop()
-
-    # # Test image recognition functionality
-    # paths = ["assets/hand.jpg"]
-    # for i in paths:
-    #     results = image_recognizer(i)
-    #     print("Image predictions for", i)
-    #     for name, percentage in results:
-    #         print(" -", name, "with certainty", percentage)
-    #         if percentage > 60:
-    #             print("SUCCESS")
-    #             break
 
     path = "assets/hand.jpg"
     results = image_recognizer(path)

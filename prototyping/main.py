@@ -23,13 +23,15 @@ import tkinter as Tk
 from PIL import ImageTk, Image
 from captcha.image import ImageCaptcha
 from imageai.Detection import ObjectDetection
+# Set up new logger for use in debugging
+logger = logging.getLogger("debug_logger")
 
 
 # Given length of captcha, generate a captcha and return generated text
 def generate_captcha(length):
     characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     captcha_text = "".join(random.choice(characters) for _ in range(length))
-    logging.debug("Generated captcha: " + captcha_text)
+    logger.debug("Generated captcha: " + captcha_text)
     image = ImageCaptcha(width=300, height=150, fonts=['assets/times.ttf', 'assets/lucon.ttf'])
     image.generate(captcha_text)
     path = 'assets/CAPTCHA.png'
@@ -60,7 +62,7 @@ class Application(Tk.Frame):
 
     # Captcha submission function validates captcha and sets up window for pin entry
     def submitCaptcha(self):
-        logging.debug("Submitted captcha, check now")
+        logger.debug("Submitted captcha, check now")
         # Validate captcha here
         if self.captchaUserInput.get() == self.captchaText:
             # Destroy and reconfigure buttons/entry boxes
@@ -81,27 +83,27 @@ class Application(Tk.Frame):
             self.quitButton = Tk.Button(self, text="Quit", command=self.quit)
             self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
         else:
-            logging.debug("Captcha failed")
+            logger.debug("Captcha failed")
             self.lock()
 
     # Pin submission function validates pin entries, sets up each pin state, and calls success function on proper entry
     def submitPin(self):
         userPinInput = self.pin.get()
         if len(userPinInput) == 4 and userPinInput == "1234" and self.pinCount == 0:
-            logging.debug("4-Digit pin passed")
+            logger.debug("4-Digit pin passed")
             self.pinCount += 1
             # Update instruction label and clear pin field
             self.instructionLabel.configure(text="Enter 8-digit pin")
             self.pinEntry.delete(0, Tk.END)
             self.pinEntry.insert(0, "")
         elif len(userPinInput) == 8 and userPinInput == "12345678" and self.pinCount == 1:
-            logging.debug("8-Digit pin passed")
+            logger.debug("8-Digit pin passed")
             self.pinCount += 1
             self.instructionLabel.configure(text="Enter 16-digit pin")
             self.pinEntry.delete(0, Tk.END)
             self.pinEntry.insert(0, "")
         elif len(userPinInput) == 16 and userPinInput == "1234567890123456" and self.pinCount == 2:
-            logging.debug("16-Digit pin passed")
+            logger.debug("16-Digit pin passed")
             self.pinCount += 1
             self.instructionLabel.configure(text="Success")
             self.pinEntry.destroy()
@@ -116,7 +118,7 @@ class Application(Tk.Frame):
             # TODO call function to set up listener for logic gate puzzle here
 
         else:
-            logging.debug("Pin entry failed")
+            logger.debug("Pin entry failed")
             self.lock()
 
     def createWidgets(self):
@@ -151,22 +153,30 @@ app = Application()
 # Params: image_path    A string path to an image
 # Returns: results      A tuple consisting of the prediction name and percent certainty
 def image_recognizer(image_path):
+    logger.debug("Recognizer called with path " + image_path + " , setting up model...")
     execution_path = os.getcwd()
     detector = ObjectDetection()
+
     # NOTE Change this to use different models
-    detector.setModelTypeAsRetinaNet()
-    # detector.setModelTypeAsYOLOv3()
+    # detector.setModelTypeAsRetinaNet()
+    detector.setModelTypeAsYOLOv3()
     # detector.setModelTypeAsTinyYOLOv3()
+
     # NOTE Path for Windows
-    detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    # detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
     # NOTE Path for Linux (RasPi)
     # detector.setModelPath(execution_path + "/assets/retinanet_resnet50_fpn_coco-eeacb38b.pth")
+    detector.setModelPath(execution_path + "/assets/yolov3.pt")
+    # detector.setModelPath(execution_path + "/assets/tiny-yolov3.pt")
 
     detector.loadModel()
+    detector.useCPU()
+    logger.debug("Model loaded successfully, performing image detection...")
     predictions = detector.detectObjectsFromImage(input_image=image_path, minimum_percentage_probability=30)
     results = []
     for prediction in predictions:
         results.append((prediction['name'], prediction['percentage_probability']))
+    logger.debug("Detection finished. Returning results.")
     return results
 
 
@@ -204,25 +214,39 @@ def main():
 
     # Enables logging if run with command line argument '-d'
     if len(sys.argv) != 1 and sys.argv[1] == '-d':
-        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-        logging.debug("Logging enabled")
+        handler = logging.StreamHandler(stream=sys.stderr)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+        logger.debug("Logging enabled")
     else:
         # Otherwise, set base logging level
-        logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+        handler = logging.StreamHandler(stream=sys.stderr)
+        handler.setLevel(logging.ERROR)
+        logger.addHandler(handler)
+        logger.setLevel(logging.ERROR)
 
+    Disable this to only test image recognition
     app.master.title("Fancy Door")
     app.mainloop()
 
-    # Test image recognition functionality
-    paths = ["assets/hand.jpg"]
-    for i in paths:
-        results = image_recognizer(i)
-        print("Image predictions for", i)
-        for name, percentage in results:
-            print(" -", name, "with certainty", percentage)
-            if percentage > 60:
-                print("SUCCESS")
-                break
+    # # Test image recognition functionality
+    # paths = ["assets/hand.jpg"]
+    # for i in paths:
+    #     results = image_recognizer(i)
+    #     print("Image predictions for", i)
+    #     for name, percentage in results:
+    #         print(" -", name, "with certainty", percentage)
+    #         if percentage > 60:
+    #             print("SUCCESS")
+    #             break
+
+    path = "assets/hand.jpg"
+    results = image_recognizer(path)
+    print("Image predictions: ")
+    print(results)
+    for name, percentage in results:
+        print(" -", name, "with certainty", percentage)
 
 
 if __name__ == "__main__":

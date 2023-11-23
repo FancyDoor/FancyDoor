@@ -226,7 +226,7 @@ def main():
         logger.addHandler(handler)
         logger.setLevel(logging.ERROR)
 
-    Disable this to only test image recognition
+    # Disable this to only test image recognition
     app.master.title("Fancy Door")
     app.mainloop()
 
@@ -244,7 +244,6 @@ def main():
     path = "assets/hand.jpg"
     results = image_recognizer(path)
     print("Image predictions: ")
-    print(results)
     for name, percentage in results:
         print(" -", name, "with certainty", percentage)
 

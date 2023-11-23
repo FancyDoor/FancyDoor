@@ -26,6 +26,20 @@ from imageai.Detection import ObjectDetection
 # Set up new logger for use in debugging
 logger = logging.getLogger("debug_logger")
 
+# Enables logging if run with command line argument '-d'
+if len(sys.argv) != 1 and sys.argv[1] == '-d':
+    handler = logging.StreamHandler(stream=sys.stderr)
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    logger.debug("Logging enabled")
+else:
+    # Otherwise, set base logging level
+    handler = logging.StreamHandler(stream=sys.stderr)
+    handler.setLevel(logging.ERROR)
+    logger.addHandler(handler)
+    logger.setLevel(logging.ERROR)
+
 
 # Given length of captcha, generate a captcha and return generated text
 def generate_captcha(length):
@@ -62,9 +76,10 @@ class Application(Tk.Frame):
 
     # Captcha submission function validates captcha and sets up window for pin entry
     def submitCaptcha(self):
-        logger.debug("Submitted captcha, check now")
+        logger.debug("Submitted captcha, checking now...")
         # Validate captcha here
         if self.captchaUserInput.get() == self.captchaText:
+            logger.debug("Captcha succeeded, setting up pin entry")
             # Destroy and reconfigure buttons/entry boxes
             self.captchaLabel.destroy()
             self.captchaEntry.destroy()
@@ -116,6 +131,7 @@ class Application(Tk.Frame):
             self.quitButton.grid(sticky='ew', padx=(100, 100), pady=(5, 50))
 
             # TODO call function to set up listener for logic gate puzzle here
+            logger.debug("TODO: Call function to set up listener for logic gate puzzle here...\n\n")
 
         else:
             logger.debug("Pin entry failed")
@@ -211,21 +227,6 @@ def scanner(state):
 
 def main():
     global app
-
-    # Enables logging if run with command line argument '-d'
-    if len(sys.argv) != 1 and sys.argv[1] == '-d':
-        handler = logging.StreamHandler(stream=sys.stderr)
-        handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-        logger.debug("Logging enabled")
-    else:
-        # Otherwise, set base logging level
-        handler = logging.StreamHandler(stream=sys.stderr)
-        handler.setLevel(logging.ERROR)
-        logger.addHandler(handler)
-        logger.setLevel(logging.ERROR)
-
     # Disable this to only test image recognition
     app.master.title("Fancy Door")
     app.mainloop()

@@ -8,4 +8,4 @@
 2. Open the terminal in PyCharm (Alt + F12)
 3. Run `./prototyping/setup_packages.bat`
 
-4. [Download the RetinaNet library](https://github.com/OlafenwaMoses/ImageAI/releases/download/3.0.0-pretrained/retinanet_resnet50_fpn_coco-eeacb38b.pth/) and place in FancyDoor/prototyping/assets
+4. [Download the YOLOv3 library](https://github.com/OlafenwaMoses/ImageAI/releases/download/3.0.0-pretrained/yolov3.pt/) and place in FancyDoor/prototyping/assets

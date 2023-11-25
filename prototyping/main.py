@@ -385,8 +385,8 @@ class Application(Tk.Frame):
 
 
     def createStartingWidgets(self):
-        logger.debug("Setting up starting widgets (TODO Voice validation)")
-        self.instructionLabel = Tk.Label(self, text="Voice validation needed")
+        logger.debug("Setting up starting widgets")
+        self.instructionLabel = Tk.Label(self, text="Voice validation needed.\n Please speak into the microphone.")
         self.instructionLabel.grid(sticky='ew', padx=(100, 100), pady=(50, 5))
 
         self.quitButton = Tk.Button(self, text="Quit", command=self.quit)

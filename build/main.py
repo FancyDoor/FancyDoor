@@ -130,7 +130,7 @@ def listen(max_delta):
             with sd.Stream(callback=get_sound):
                 sd.sleep(50)
             delta = abs(sound_val - prev_sound_val)
-            print(delta)
+            logger.debug(str(delta))
             prev_sound_val = sound_val
         return True
     except:
@@ -179,9 +179,6 @@ def image_recognizer(image_path):
     detector.setModelTypeAsYOLOv3()
     # detector.setModelTypeAsTinyYOLOv3()
 
-    # NOTE Path for Windows
-    # detector.setModelPath(execution_path + "\\assets\\retinanet_resnet50_fpn_coco-eeacb38b.pth")
-    # NOTE Path for Linux (RasPi)
     # detector.setModelPath(execution_path + "/assets/retinanet_resnet50_fpn_coco-eeacb38b.pth")
     detector.setModelPath(execution_path + "/assets/yolov3.pt")
     # detector.setModelPath(execution_path + "/assets/tiny-yolov3.pt")
